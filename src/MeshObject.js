@@ -34,8 +34,7 @@ export class MeshObject {
           this.mesh.traverse((child) => {
             if(child.isMesh){
               child.castShadow = true;
-            }
-            console.log("child: ", child);
+            };
           });
           this.mesh.castShadow = true; // 복잡한 모델은 shadow를 받지 못할 수도 있음
           this.mesh.position.set(this.x, this.y, this.z);
