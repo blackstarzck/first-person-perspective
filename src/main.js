@@ -82,12 +82,35 @@ const wall2 = new MeshObject({
 const desk = new MeshObject({
 	scene,
 	loader,
+	name: 'desk',
 	modelSrc: '/models/desk.glb',
 	width: 1.8,
 	height: 0.8,
 	depth: 0.75,
 	x: 1.2,
 	z: -1.9
+});
+
+const lamp = new MeshObject({
+	scene,
+	loader,
+	name: 'lamp',
+	modelSrc: '/models/lamp.glb',
+	width: 0.5,
+	height: 1.8,
+	depth: 0.5,
+	z: -1.7
+});
+
+const roboticVaccum = new MeshObject({
+	scene,
+	loader,
+	name: 'roboticVaccum',
+	modelSrc: '/models/vaccum.glb',
+	width: 0.5,
+	height: 0.1,
+	depth: 0.5,
+	x: -1
 });
 
 // Draw
