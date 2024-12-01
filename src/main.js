@@ -31,8 +31,8 @@ scene.add(camera);
 
 // Controls
 const controls = new OrbitControls(camera, canvas);
-const loader = new GLTFLoader();
-
+const gltfLoader = new GLTFLoader();
+const textureLoader = new THREE.TextureLoader();
 
 // Light
 const ambientLight = new THREE.AmbientLight('white', 1);
@@ -84,7 +84,7 @@ const wall2 = new MeshObject({
 
 const desk = new MeshObject({
 	scene,
-	loader,
+	loader: gltfLoader,
 	name: 'desk',
 	modelSrc: '/models/desk.glb',
 	width: 1.8,
@@ -96,7 +96,7 @@ const desk = new MeshObject({
 
 const lamp = new MeshObject({
 	scene,
-	loader,
+	loader: gltfLoader,
 	name: 'lamp',
 	modelSrc: '/models/lamp.glb',
 	width: 0.5,
@@ -107,13 +107,27 @@ const lamp = new MeshObject({
 
 const roboticVaccum = new MeshObject({
 	scene,
-	loader,
+	loader: gltfLoader,
 	name: 'roboticVaccum',
 	modelSrc: '/models/vaccum.glb',
 	width: 0.5,
 	height: 0.1,
 	depth: 0.5,
 	x: -1
+});
+
+const magazine = new MeshObject({
+	scene,
+	loader: textureLoader,
+	name: 'magazine',
+	mapSrc: '/models/magazine.jpg',
+	width: 0.2,
+	height: 0.02,
+	depth: 0.29,
+	x: 0.7,
+	y: 1.32,
+	z: -2.2,
+	rotationX: THREE.MathUtils.degToRad(52)
 });
 
 // Draw
