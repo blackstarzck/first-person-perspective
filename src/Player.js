@@ -2,6 +2,7 @@ import {
   Mesh,
   BoxGeometry,
   MeshBasicMaterial,
+  MathUtils,
 } from 'three';
 import {
   Vec3, // x, y, z
@@ -13,8 +14,6 @@ import {
 
 export class Player {
   constructor(info) {
-    
-    this.name = info.name;
     this.width = info.width || 1;
     this.height = info.height || 1;
     this.depth = info.depth || 1;
@@ -39,7 +38,8 @@ export class Player {
     // Primitives
     const geometry = new BoxGeometry(this.width, this.height, this.depth);
     const material = new MeshBasicMaterial({
-      color: this.color,
+      transparent: true,
+      opacity: 0
     });
 
     this.mesh = new Mesh(geometry, material);
@@ -48,6 +48,22 @@ export class Player {
 
     this.scene.add(this.mesh);
     this.setCannonBody();
+  }
+
+  walk(value, direction){
+    if(direction === 'left') this.rotationY -= MathUtils.degToRad(90);
+    if(direction === 'right') this.rotationY =+ MathUtils.degToRad(90);
+
+    this.x += Math.sin(this.rotationY) * value;
+    this.z += Math.cos(this.rotationY) * value;
+
+    if(this.cannonBody){
+      this.cannonBody.position.x = this.x;
+      this.cannonBody.position.z = this.z;
+
+      // this.mesh.position.x = this.x;
+      // this.mesh.position.z = this.z;
+    }
   }
 
   setCannonBody(){

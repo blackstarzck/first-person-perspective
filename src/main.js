@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { MeshObject } from './MeshObject';
+import { KeyController } from './KeyController';
+import { Player } from './Player';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import * as CANNON from 'cannon-es';
@@ -34,6 +36,7 @@ scene.add(camera);
 const controls = new PointerLockControls(camera, document.body);
 const gltfLoader = new GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
+const keyController = new KeyController();
 
 // Light
 const ambientLight = new THREE.AmbientLight('white', 1);
@@ -50,6 +53,16 @@ const cannonWorld = new CANNON.World();
 cannonWorld.gravity.set(0, -9.82, 0);
 
 const defaultCannonMaterial = new CANNON.Material('default');
+const playerCannonMaterial = new CANNON.Material('player');
+const playerContactMaterial = new CANNON.ContactMaterial(
+	playerCannonMaterial,
+	playerCannonMaterial,
+	{
+		friction: 100,
+		restitution: 0
+	}
+);
+
 const defaultContactMaterial = new CANNON.ContactMaterial(
 	defaultCannonMaterial,
 	defaultCannonMaterial,
@@ -59,12 +72,20 @@ const defaultContactMaterial = new CANNON.ContactMaterial(
 	}
 );
 
+cannonWorld.addContactMaterial(playerContactMaterial);
 cannonWorld.defaultContactMaterial = defaultContactMaterial;
 
 const cannonObjects = []; // 물리엔진에 영향을 받는 모든 객체를 넣어 제어
 
 
 // Mesh
+const player = new Player({
+	scene,
+	cannonWorld,
+	cannonMaterial: playerCannonMaterial,
+	mass: 50
+});
+
 const ground = new MeshObject({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
@@ -77,6 +98,7 @@ const ground = new MeshObject({
 	y: -0.05,
 	differenceY: 0
 });
+
 const floorMesh = new MeshObject({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
@@ -131,6 +153,7 @@ const lamp = new MeshObject({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
 	mass: 10,
+	cannonShape: new CANNON.Cylinder(0.25, 0.3, 1.8, 32),
 	scene,
 	loader: gltfLoader,
 	name: 'lamp',
@@ -144,8 +167,8 @@ const lamp = new MeshObject({
 const roboticVaccum = new MeshObject({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
-	mass: 0.5,
 	mass: 10,
+	cannonShape: new CANNON.Cylinder(0.25, 0.25, 0.1, 32),
 	scene,
 	loader: gltfLoader,
 	name: 'roboticVaccum',
@@ -159,6 +182,7 @@ const roboticVaccum = new MeshObject({
 const magazine = new MeshObject({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
+	mass: 0.5,
 	scene,
 	loader: textureLoader,
 	name: 'magazine',
@@ -177,8 +201,6 @@ cannonObjects.push(ground, floorMesh, wall1, wall2, desk, lamp, roboticVaccum, m
 // Draw
 const clock = new THREE.Clock();
 let delta;
-
-
 const draw = () => {
 	delta = clock.getDelta();
 
@@ -195,10 +217,35 @@ const draw = () => {
 		};
 	};
 
-  rotateCamera();
+	if(player.cannonBody){
+		player.x = player.cannonBody.position.x;
+		player.y = player.cannonBody.position.y;
+		player.z = player.cannonBody.position.z;
+		player.mesh.position.copy(player.cannonBody.position);
+		move();
+
+		// console.log('player.cannonBody.position: ', player.cannonBody.position);
+	}
+
+  moveCamera();
 
 	renderer.render(scene, camera);
 	renderer.setAnimationLoop(draw);
+}
+
+const move = () => {
+	if(keyController.keys['KeyW'] || keyController.keys['ArrowUp']){
+		player.walk(-0.05, 'forward');
+	};
+	if(keyController.keys['KeyS'] || keyController.keys['ArrowUDown']){
+		player.walk(0.05, 'backward');
+	};
+	if(keyController.keys['KeyA'] || keyController.keys['ArrowLeft']){
+		player.walk(0.05, 'left');
+	};
+	if(keyController.keys['KeyD'] || keyController.keys['ArrowRight']){
+		player.walk(0.05, 'right');
+	};
 }
 
 const setLayout = () => {
@@ -217,7 +264,8 @@ const updateMovementValue = (event) => {
 const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const minPolarAngle = 0;
 const maxPolarAngle = Math.PI; // 180
-const rotateCamera = () => {
+const moveCamera = () => {
+	// rotation
 	euler.setFromQuaternion(camera.quaternion);
 	euler.y -= movementX;
 	euler.x -= movementY;
@@ -232,6 +280,12 @@ const rotateCamera = () => {
 	if(Math.abs(movementY) < 0.005) movementY = 0;
 
 	camera.quaternion.setFromEuler(euler);
+	player.rotationY = euler.y;
+
+	// position
+	camera.position.x = player.x;
+	camera.position.y = player.y + 1;
+	camera.position.z = player.z;
 }
 
 const setMode = (mode) => {
