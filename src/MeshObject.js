@@ -106,6 +106,29 @@ export class MeshObject {
       material: this.cannonMaterial,
     });
 
+    // this.cannonBody.quaternion.setFromAxisAngle(
+    //   new Vec3(0, 1, 0), // y축 기준으로
+    //   this.rotationY
+    // );
+
+    // rotation: x
+    const quatX = new Quaternion();
+    const axisX = new Vec3(1, 0, 0);
+    quatX.setFromAxisAngle(axisX, this.rotationX);
+
+    // rotation: x
+    const quatY = new Quaternion();
+    const axisY = new Vec3(0, 1, 0);
+    quatY.setFromAxisAngle(axisY, this.rotationY);
+
+    // rotation: x
+    const quatZ = new Quaternion();
+    const axisZ = new Vec3(0, 0, 1);
+    quatZ.setFromAxisAngle(axisZ, this.rotationZ);
+
+    const combinedQuat = quatX.mult(quatY).mult(quatZ);
+    this.cannonBody.quaternion = combinedQuat;
+
     this.cannonWorld.addBody(this.cannonBody);
   }
 }
