@@ -45,7 +45,7 @@ export class Player {
     this.mesh = new Mesh(geometry, material);
     this.mesh.position.set(this.x, this.y, this.z);
     this.mesh.rotation.set(this.rotationX, this.rotationY, this.rotationZ);
-
+    this.mesh.name = 'player';
     this.scene.add(this.mesh);
     this.setCannonBody();
   }

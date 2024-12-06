@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MeshObject } from './MeshObject';
+import { MeshObject, Lamp, RoboticVaccum } from './MeshObject';
 import { KeyController } from './KeyController';
 import { Player } from './Player';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
@@ -149,11 +149,12 @@ const desk = new MeshObject({
 	z: -1.9,
 });
 
-const lamp = new MeshObject({
+const lamp = new Lamp({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
 	mass: 10,
 	cannonShape: new CANNON.Cylinder(0.25, 0.3, 1.8, 32),
+	geometry: new THREE.CylinderGeometry(0.25, 0.25, 1.81, 32),
 	scene,
 	loader: gltfLoader,
 	name: 'lamp',
@@ -161,14 +162,28 @@ const lamp = new MeshObject({
 	width: 0.5,
 	height: 1.8,
 	depth: 0.5,
-	z: -1.7
+	z: -1.7,
+	callback: () => {
+		// 조명 추가
+		// light 를 mesh 의 하위 요소로 추가
+		const lampLight = new THREE.PointLight('#EAC6AB', 0, 50);
+		lampLight.castShadow = true;
+		lampLight.shadow.mapSize.width = 2048;
+		lampLight.shadow.mapSize.height = 2048;
+
+		lampLight.position.set(0, .75, 0);
+
+		lamp.mesh.add(lampLight); // lampLight 가 lamp 의 하위요소가 되어 lamp 의 위치를 따라감 (그룹화)
+		lamp.light = lampLight;
+	}
 });
 
-const roboticVaccum = new MeshObject({
+const roboticVaccum = new RoboticVaccum({
 	cannonWorld,
 	cannonMaterial: defaultCannonMaterial,
 	mass: 10,
 	cannonShape: new CANNON.Cylinder(0.25, 0.25, 0.1, 32),
+	geometry: new THREE.CylinderGeometry(0.25, 0.25, 0.11, 32),
 	scene,
 	loader: gltfLoader,
 	name: 'roboticVaccum',
@@ -198,6 +213,40 @@ const magazine = new MeshObject({
 
 cannonObjects.push(ground, floorMesh, wall1, wall2, desk, lamp, roboticVaccum, magazine);
 
+// Raycaaster
+const mouse = new THREE.Vector2(); // 마우스 좌표를 저장할 객체
+const raycaster = new THREE.Raycaster(); // 광선을 쏠 레이캐스터 객체
+const checkIntersect = () => {
+	raycaster.setFromCamera(mouse, camera); // 마우스 좌표를 기준으로 광선을 쏨
+
+	const intersects = raycaster.intersectObjects(scene.children);
+	for(const item of intersects){
+
+		console.log(item.object.name);
+
+		if(item.object.name === 'ground'){
+			break;
+		}else if(item.object.name === 'floor'){
+			break;
+		}else if(item.object.name === 'wall1'){
+			break;
+		}else if(item.object.name === 'wall2'){
+			break;
+		}else if(item.object.name === 'desk'){
+			break;
+		}else if(item.object.name === 'lamp'){
+			lamp.togglePower();
+			break;
+		}else if(item.object.name === 'roboticVaccum'){
+			roboticVaccum.togglePower();
+			break;
+		}else if(item.object.name === 'magazine'){
+			break;
+		};
+	};
+}
+
+
 // Draw
 const clock = new THREE.Clock();
 let delta;
@@ -214,6 +263,11 @@ const draw = () => {
 		if(object.cannonBody){
 			object.mesh.position.copy(object.cannonBody.position);
 			object.mesh.quaternion.copy(object.cannonBody.quaternion);
+
+			if(object.transparentMesh){
+				object.transparentMesh.position.copy(object.cannonBody.position);
+				object.transparentMesh.quaternion.copy(object.cannonBody.quaternion);
+			};
 		};
 	};
 
@@ -222,12 +276,12 @@ const draw = () => {
 		player.y = player.cannonBody.position.y;
 		player.z = player.cannonBody.position.z;
 		player.mesh.position.copy(player.cannonBody.position);
+		
 		move();
-
-		// console.log('player.cannonBody.position: ', player.cannonBody.position);
 	}
 
   moveCamera();
+	roboticVaccum.move();
 
 	renderer.render(scene, camera);
 	renderer.setAnimationLoop(draw);
@@ -302,7 +356,7 @@ const setMode = (mode) => {
 window.addEventListener('resize', setLayout);
 
 document.addEventListener('click', () => {
-	canvas.requestPointerLock();
+	canvas.requestPointerLock(); // 마우스 커서를 숨기고 클릭 시 컨트롤을 얻음 (게임 모드)
 });
 
 document.addEventListener('pointerlockchange', () => {
@@ -310,6 +364,18 @@ document.addEventListener('pointerlockchange', () => {
 		setMode('game');
 	}else{
 		setMode('website');
+	};
+});
+
+canvas.addEventListener('click', (event) => {
+	// mouse.x = event.clientX / window.innerWidth * 2 - 1;
+	// mouse.y = -(event.clientX / window.innerWidth * 2 - 1);
+
+	mouse.x = 0;
+	mouse.y = 0;
+
+	if(document.body.dataset.mode === 'game'){
+		checkIntersect();
 	};
 });
 

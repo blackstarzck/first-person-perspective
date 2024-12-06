@@ -2,6 +2,7 @@ import {
   Mesh,
   BoxGeometry,
   MeshLambertMaterial,
+  MeshBasicMaterial
 } from 'three';
 import {
   Vec3, // x, y, z
@@ -44,7 +45,6 @@ export class MeshObject {
         this.modelSrc,
         (glb) => {
           this.mesh =  glb.scene;
-          console.log(`${this.name} loaded`);
           this.mesh.traverse((child) => {
             if(child.isMesh){
               child.castShadow = true; // 복잡한 모델은 shadow를 받지 못할 수도 있음
@@ -52,9 +52,27 @@ export class MeshObject {
           });
           this.mesh.position.set(this.x, this.y, this.z);
           this.mesh.rotation.set(this.rotationX, this.rotationY, this.rotationZ);
+          this.mesh.name = this.name;
 
           this.scene.add(this.mesh);
+
+          // Transparent Mesh for Raycasting
+          const geometry = info.geometry || new BoxGeometry(this.width, this.height, this.depth);
+          this.transparentMesh = new Mesh(
+            geometry,
+            new MeshBasicMaterial({
+              color: 'green',
+              transparent: true,
+              opacity: 0
+            })
+          );
+          this.transparentMesh.name = this.name;
+          this.transparentMesh.position.set(this.x, this.y, this.z);
+          this.scene.add(this.transparentMesh);
+
           this.setCannonBody();
+
+          if(info.callback) info.callback();
         },
         (xhr) => {
           // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
@@ -77,6 +95,7 @@ export class MeshObject {
           this.mesh.receiveShadow = true;
           this.mesh.position.set(this.x, this.y, this.z);
           this.mesh.rotation.set(this.rotationX, this.rotationY, this.rotationZ);
+          this.mesh.name = this.name;
 
           this.scene.add(this.mesh);
           this.setCannonBody();
@@ -94,6 +113,7 @@ export class MeshObject {
       this.mesh.receiveShadow = true
       this.mesh.position.set(this.x, this.y, this.z);
       this.mesh.rotation.set(this.rotationX, this.rotationY, this.rotationZ);
+      this.mesh.name = this.name;
 
       this.scene.add(this.mesh);
       this.setCannonBody();
@@ -132,5 +152,41 @@ export class MeshObject {
     this.cannonBody.quaternion = combinedQuat;
 
     this.cannonWorld.addBody(this.cannonBody);
+  }
+}
+
+export class Lamp extends MeshObject {
+  constructor(info){
+    super(info);
+  }
+
+  togglePower(){
+    console.log("togglePower intensity: ", this.light);
+
+    this.light.intensity = this.light.intensity === 0 ? 3 : 0;
+  }
+}
+
+export class RoboticVaccum extends MeshObject {
+  constructor(info){
+    super(info);
+    this.powerOn = false;
+    this.r = 0; // 반지름
+    this.angle = 0;
+    this.originX = this.x;
+    this.originZ = this.z;
+  }
+  
+  togglePower(){
+    this.powerOn = !this.powerOn;
+  }
+
+  move(){
+    if(this.powerOn){
+      this.cannonBody.position.x = this.originX + Math.cos(this.angle) * this.r;
+      this.cannonBody.position.z = this.originZ + Math.sin(this.angle) * this.r;
+      this.angle += 0.003;
+      this.r = Math.sin(this.angle * 2);
+    };
   }
 }
