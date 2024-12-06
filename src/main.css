@@ -37,3 +37,39 @@ body[data-mode='game'] .target-marker {
 	height: 2px;
 	background-color: rgba(0, 0, 0, .5);
 }
+
+/* Mobile Controller  */
+.no-touchevents .mobile-controller {
+	display: none;
+}
+
+.mobile-controller {
+	position: fixed;
+	bottom: 30px;
+	left: 30px;
+	width: 151px;
+	height: 151px;
+	border-radius: 50%;
+	background-color: rgba(0, 0, 0, .1);
+}
+
+.mobile-controller::before {
+	content: '';
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	width: 131px;
+	height: 131px;
+	border: 1px solid #FFFFFF;
+	border-radius: 50%;
+}
+
+.mobile-controller-bar {
+	position: absolute;
+	left: 75px;
+	top: 10px;
+	width: 1px;
+	height: 66px;
+	background-color: #FFFFFF;
+	transform-origin: bottom;
+}
