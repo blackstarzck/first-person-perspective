@@ -213,6 +213,16 @@ const magazine = new MeshObject({
 
 cannonObjects.push(ground, floorMesh, wall1, wall2, desk, lamp, roboticVaccum, magazine);
 
+// Device detection
+let device;
+const setDevice = () => {
+	const htmlElement = document.querySelector('html');
+	const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+	device = isMobile ? 'mobile' : 'desktop';
+
+	htmlElement.classList.add(isMobile ? 'touchevents' : 'no-touchevents');
+}
+
 // Raycaaster
 const mouse = new THREE.Vector2(); // 마우스 좌표를 저장할 객체
 const raycaster = new THREE.Raycaster(); // 광선을 쏠 레이캐스터 객체
@@ -356,6 +366,7 @@ const setMode = (mode) => {
 window.addEventListener('resize', setLayout);
 
 document.addEventListener('click', () => {
+	if(device === 'mobile') return; // 모바일에서는 'lock' 이벤트가 발생하지 않음
 	canvas.requestPointerLock(); // 마우스 커서를 숨기고 클릭 시 컨트롤을 얻음 (게임 모드)
 });
 
@@ -368,16 +379,22 @@ document.addEventListener('pointerlockchange', () => {
 });
 
 canvas.addEventListener('click', (event) => {
-	// mouse.x = event.clientX / window.innerWidth * 2 - 1;
-	// mouse.y = -(event.clientX / window.innerWidth * 2 - 1);
-
-	mouse.x = 0;
-	mouse.y = 0;
-
-	if(document.body.dataset.mode === 'game'){
+	if(device === 'mobile'){
+		mouse.x = event.clientX / window.innerWidth * 2 - 1;
+		mouse.y = -(event.clientX / window.innerWidth * 2 - 1);
 		checkIntersect();
+	}else{
+		mouse.x = 0;
+		mouse.y = 0;
+		if(document.body.dataset.mode === 'game'){
+			checkIntersect();
+		};
 	};
 });
 
 
+setDevice();
+setMode('website');
 draw();
+
+console.log('device: ', device);
