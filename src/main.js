@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { MeshObject, Lamp, RoboticVaccum } from './MeshObject';
 import { KeyController } from './KeyController';
+import { TouchController } from './TouchController';
 import { Player } from './Player';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
@@ -37,6 +38,7 @@ const controls = new PointerLockControls(camera, document.body);
 const gltfLoader = new GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
 const keyController = new KeyController();
+const touchController = new TouchController();
 
 // Light
 const ambientLight = new THREE.AmbientLight('white', 1);
@@ -329,10 +331,12 @@ const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const minPolarAngle = 0;
 const maxPolarAngle = Math.PI; // 180
 const moveCamera = () => {
+	let factor = device === 'mobile' ? delta : delta * 50; // 모바일 환경을 위한 감도조절;
+
 	// rotation
 	euler.setFromQuaternion(camera.quaternion);
-	euler.y -= movementX;
-	euler.x -= movementY;
+	euler.y -= movementX * factor;
+	euler.x -= movementY * factor;
 	euler.x = Math.max(
 		Math.PI / 2 - maxPolarAngle,
 		Math.min(Math.PI / 2 - minPolarAngle, euler.x)
@@ -392,9 +396,64 @@ canvas.addEventListener('click', (event) => {
 	};
 });
 
+const touchX = [];
+const touchY = [];
+window.addEventListener('touchstart', (event) => {
+
+	if(touchController.elem === event.target)	return;
+
+	// 초기화
+	movementX = 0; 
+	movementY = 0; 
+
+	touchX[0] = event.targetTouches[0].clientX;
+	touchX[1] = event.targetTouches[0].clientX;
+	touchY[0] = event.targetTouches[0].clientY;
+	touchY[1] = event.targetTouches[0].clientY;
+});
+
+window.addEventListener('touchmove', (event) => {
+	if(touchController.elem === event.target)	return;
+
+	// 초기화
+	movementX = 0; 
+	movementY = 0; 
+
+	// 이동량 계산
+	touchX[0] = touchX[1]; // previous
+	touchX[1] = event.targetTouches[0].clientX; // current
+	touchY[0] = touchY[1];
+	touchY[1] = event.targetTouches[0].clientY;
+
+	movementX = touchX[1] - touchX[0];
+	movementY = touchY[1] - touchY[0];
+
+	console.log(movementX, movementY);
+});
+
+window.addEventListener('touchend', (event) => {
+	if(touchController.elem === event.target)	return;
+
+	// 초기화
+	movementX = 0;
+	movementY = 0;
+
+	touchX[0] = touchX[1] = 0;
+	touchY[0] = touchY[1] = 0;
+});
+
+// 이벤트의 기본 동작을 막음, 계산에 오차가 생기지 않도록
+window.addEventListener('gesturestart', (event) => {
+	event.preventDefault();
+});
+window.addEventListener('gesturechange', (event) => {
+	event.preventDefault();
+});
+window.addEventListener('gestureend', (event) => {
+	event.preventDefault();
+});
+
 
 setDevice();
 setMode('website');
 draw();
-
-console.log('device: ', device);
