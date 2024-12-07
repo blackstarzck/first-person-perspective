@@ -53,7 +53,7 @@ export class Player {
 
   walk(value, direction){
     if(direction === 'left') this.rotationY -= MathUtils.degToRad(90);
-    if(direction === 'right') this.rotationY =+ MathUtils.degToRad(90);
+    if(direction === 'right') this.rotationY += MathUtils.degToRad(90);
 
     this.x += Math.sin(this.rotationY) * value;
     this.z += Math.cos(this.rotationY) * value;

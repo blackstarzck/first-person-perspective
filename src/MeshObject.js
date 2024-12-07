@@ -39,8 +39,6 @@ export class MeshObject {
     this.mass = info.mass || 0;
     this.cannonWorld = info.cannonWorld;
     this.cannonMaterial = info.cannonMaterial;
-
-    console.log(`${this.name}`, this.mass)
     
     if(info.modelSrc){
       // GLB

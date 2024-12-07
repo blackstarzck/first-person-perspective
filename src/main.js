@@ -299,7 +299,7 @@ const draw = () => {
 		};
 	};
 
-  moveCamera();
+  if(isLocked) moveCamera();
 	roboticVaccum.move();
 
 	renderer.render(scene, camera);
@@ -352,11 +352,13 @@ const updateMovementValue = (event) => {
 	movementX = event.movementX * delta;
 	movementY = event.movementY * delta;
 }
-
+let isLocked = false;
 const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const minPolarAngle = 0;
 const maxPolarAngle = Math.PI; // 180
 const moveCamera = () => {
+	
+
 	let factor = device === 'mobile' ? delta * 0.3 : delta * 10; // 모바일 환경을 위한 감도조절, 곱하는 값이 클수록 민감해짐
 
 	// rotation
@@ -380,6 +382,7 @@ const moveCamera = () => {
 	camera.position.x = player.x;
 	camera.position.y = player.y + 1;
 	camera.position.z = player.z;
+	
 }
 
 const setMode = (mode) => {
@@ -400,12 +403,16 @@ document.addEventListener('click', () => {
 	canvas.requestPointerLock(); // 마우스 커서를 숨기고 클릭 시 컨트롤을 얻음 (게임 모드)
 });
 
-document.addEventListener('pointerlockchange', () => {
+document.addEventListener('pointerlockchange', (event) => {
 	if(document.pointerLockElement === canvas){
 		setMode('game');
+		isLocked = true;
 	}else{
 		setMode('website');
+		isLocked = false;
 	};
+
+	console.log('document.pointerLockElement: ', document.pointerLockElement);
 });
 
 canvas.addEventListener('click', (event) => {
