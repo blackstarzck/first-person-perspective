@@ -2,7 +2,8 @@ import {
   Mesh,
   BoxGeometry,
   MeshLambertMaterial,
-  MeshBasicMaterial
+  MeshBasicMaterial,
+  SphereGeometry
 } from 'three';
 import {
   Vec3, // x, y, z
@@ -38,6 +39,8 @@ export class MeshObject {
     this.mass = info.mass || 0;
     this.cannonWorld = info.cannonWorld;
     this.cannonMaterial = info.cannonMaterial;
+
+    console.log(`${this.name}`, this.mass)
     
     if(info.modelSrc){
       // GLB
@@ -83,7 +86,7 @@ export class MeshObject {
       );
     }else if(this.mapSrc){
       // Textures
-      const geometry = new BoxGeometry(this.width, this.height, this.depth);
+      const geometry = info.geometry || new BoxGeometry(this.width, this.height, this.depth);
       this.loader.load(
         this.mapSrc,
         (texture) => {
@@ -103,7 +106,7 @@ export class MeshObject {
       );
     }else{
       // Primitives
-      const geometry = new BoxGeometry(this.width, this.height, this.depth);
+      const geometry = info.geometry || new BoxGeometry(this.width, this.height, this.depth);
       const material = new MeshLambertMaterial({
         color: this.color,
       });
@@ -128,22 +131,25 @@ export class MeshObject {
       material: this.cannonMaterial,
     });
 
-    // this.cannonBody.quaternion.setFromAxisAngle(
-    //   new Vec3(0, 1, 0), // y축 기준으로
-    //   this.rotationY
-    // );
+    // 초기속도 제거
+    // this.cannonBody.velocity.set(0, 0, 0);
+    // this.cannonBody.angularVelocity.set(0, 0, 0);
+
+    // 작은 움직임 방지
+    this.cannonBody.linearDamping = 0.9;
+    this.cannonBody.angularDamping = 0.9;
 
     // rotation: x
     const quatX = new Quaternion();
     const axisX = new Vec3(1, 0, 0);
     quatX.setFromAxisAngle(axisX, this.rotationX);
 
-    // rotation: x
+    // rotation: y
     const quatY = new Quaternion();
     const axisY = new Vec3(0, 1, 0);
     quatY.setFromAxisAngle(axisY, this.rotationY);
 
-    // rotation: x
+    // rotation: z
     const quatZ = new Quaternion();
     const axisZ = new Vec3(0, 0, 1);
     quatZ.setFromAxisAngle(axisZ, this.rotationZ);

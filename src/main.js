@@ -215,6 +215,8 @@ const magazine = new MeshObject({
 
 cannonObjects.push(ground, floorMesh, wall1, wall2, desk, lamp, roboticVaccum, magazine);
 
+
+
 // Device detection
 let device;
 const setDevice = () => {
@@ -289,8 +291,13 @@ const draw = () => {
 		player.z = player.cannonBody.position.z;
 		player.mesh.position.copy(player.cannonBody.position);
 		
-		move();
-	}
+
+		if(device === 'mobile'){
+			moveMobile();
+		}else{
+			move();
+		};
+	};
 
   moveCamera();
 	roboticVaccum.move();
@@ -314,7 +321,26 @@ const move = () => {
 	};
 }
 
+const moveMobile = () => {
+	if(!touchController.walkTouch) return;
+
+	const cx = touchController.cx;
+	const cy = touchController.cy;
+	const xx = touchController.walkTouch.clientX - cx;
+	const yy = touchController.walkTouch.clientY - cy;
+	const angle = Math.atan2(-yy, xx);
+	const angle2 = Math.atan2(yy, xx);
+
+	player.walkMobile(delta, angle); // delta 는 속도를 조절하기 위한 값, angle 은 이동 방향을 결정하는 값
+	
+	touchController.setAngleOfBar(angle2); // 45도
+}
+
 const setLayout = () => {
+	setDevice();
+
+	if(device === 'mobile') touchController.setPosition();
+
 	camera.aspect = window.innerWidth / window.innerHeight;
 	camera.updateProjectionMatrix();
 	renderer.setSize(window.innerWidth, window.innerHeight);
@@ -331,7 +357,7 @@ const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const minPolarAngle = 0;
 const maxPolarAngle = Math.PI; // 180
 const moveCamera = () => {
-	let factor = device === 'mobile' ? delta : delta * 50; // 모바일 환경을 위한 감도조절;
+	let factor = device === 'mobile' ? delta * 0.3 : delta * 50; // 모바일 환경을 위한 감도조절, 곱하는 값이 클수록 민감해짐
 
 	// rotation
 	euler.setFromQuaternion(camera.quaternion);
