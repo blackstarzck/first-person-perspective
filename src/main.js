@@ -299,7 +299,7 @@ const draw = () => {
 		};
 	};
 
-  if(isLocked) moveCamera();
+  if(isLocked || device === 'mobile') moveCamera();
 	roboticVaccum.move();
 
 	renderer.render(scene, camera);
@@ -357,8 +357,6 @@ const euler = new THREE.Euler(0, 0, 0, 'YXZ');
 const minPolarAngle = 0;
 const maxPolarAngle = Math.PI; // 180
 const moveCamera = () => {
-	
-
 	let factor = device === 'mobile' ? delta * 0.3 : delta * 10; // 모바일 환경을 위한 감도조절, 곱하는 값이 클수록 민감해짐
 
 	// rotation
